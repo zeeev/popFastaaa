@@ -1,6 +1,6 @@
 # popFastaaa
 
-popFastaaa are simple stand-alone programs for analysis of aligned Multi-FASTA format.
+Simple stand-alone programs for analysis of aligned Multi-FASTA format.
 
 ####Availible analyses:
 - [X] Nucleotide diversity (PI)
