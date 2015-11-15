@@ -51,13 +51,59 @@ THE SOFTWARE.
 struct options{
   bool                     indel;
   uint                    window;
-  int                       nhap;
+  uint                      nhap;
+  uint                    length;
   std::string              seqid;
-  std::vector<std::string> files;
+  std::string               file;
 }globalOpts;
 
 static const char *optString = "hiw:f:s:";
 
+//------------------------------- XXXXXXXXXX --------------------------------
+void printVersion(void){
+  cerr << "Version: " << VERSION << endl;
+  cerr << "Contact: zev.kronenberg [at] gmail.com " << endl;
+  cerr << "Notes  : -If you find a bug, please open a report on github!" << endl;
+  cerr << endl;
+}
+//------------------------------- XXXXXXXXXX --------------------------------
+
+void printHelp(void){
+  //------------------------------- XXXXXXXXXX --------------------------------
+  std::cerr << std::endl;
+  std::cerr << " Example:                                       " << std::endl;
+  std::cerr << "        samtools faidx my.fasta                 " << std::endl;
+  
+
+  std::cerr << "        PI -f my.fasta -s \"alignment-name\" \\ " << std::endl;
+  std::cerr << "        -w 200 -i  > pi.out 2> pi.err           " << std::endl;
+  std::cerr << std::endl;
+  std::cerr << " Required:  " << std::endl;
+  //------------------------------- XXXXXXXXXX --------------------------------
+
+  std::cerr << "          -f - <STRING> - A FASTA multiple alignment format." << std::endl;
+  std::cerr << "                          Must be indexed by samtools faidx." << std::endl;
+  std::cerr << "          -s - <STRING> - Any name for the first column in  " << std::endl;
+  std::cerr << "                          the output file.                  " << std::endl;
+  std::cerr << std::endl;
+  std::cerr << " Optional:  " << std::endl; 
+  std::cerr << "          -w - <INT>    - Window size, in base pair [20bp]." << std::endl;
+  std::cerr << "          -i - <FLAG>   - Ignore indels (\"-\")    [false]." << std::endl;
+  std::cerr << "          -h - <FLAG>   - Print help statement     [false]." << std::endl;
+  std::cerr << std::endl;
+  std::cerr << " Output:   " << std::endl;
+  std::cerr << "           PI outputs a four column text file to STDOUT.   "  << std::endl;
+  std::cerr << "           Column 1: Alignment name.                       "  << std::endl;
+  std::cerr << "           Column 2: Start of window (one based).          "  << std::endl;
+  std::cerr << "           Column 3: End of window (one based).            "  << std::endl;
+  std::cerr << "           Column 4. Pi (Nucleotide diversity).            "  << std::endl;
+  std::cerr << std::endl;
+  std::cerr << " Citation:                                                 "  << std::endl;
+  std::cerr << "           Nei, M.; Masatoshi Nei; Wen-Hsiung Li (October 1, 1979)" << std::endl;
+  std::cerr << std::endl;
+  printVersion();
+
+}
 //-------------------------------   OPTIONS   --------------------------------
 int parseOpts(int argc, char** argv)
 {
@@ -87,7 +133,7 @@ int parseOpts(int argc, char** argv)
       }
     case 'f':
       {
-	globalOpts.files = split(optarg, ",");
+	globalOpts.file = optarg ;
 	break;
       }
     case '?':
@@ -97,7 +143,6 @@ int parseOpts(int argc, char** argv)
 	break;
       }
     }
-    
     opt = getopt( argc, argv, optString ); 
   }
   return 1;
@@ -117,13 +162,28 @@ double pi(std::map<std::string, int> & hapWin){
 
   double piSum = 0;
 
+  map< std::string, int > done;
+
+  int bump = 0;
+
+
   for(std::map<std::string, int>::iterator hapA = hapWin.begin();
       hapA != hapWin.end(); hapA++){
-    for(std::map<std::string, int>::iterator hapB = hapWin.begin();
-	hapB != hapWin.end(); hapB++){
+
+    bump += 1;
+
+    std::map<std::string, int>::iterator hapB = hapWin.begin();
+    std::advance(hapB, bump);
+
+    for( ; hapB != hapWin.end(); hapB++){
       if(hapA->first == hapB->first){
+	done[hapA->first] = 1;
 	continue;
       }
+      if(done.find(hapB->first) != done.end()){
+	continue;
+      }
+
       int ndiff = 0;
       int nsame = 0;
 
@@ -137,10 +197,17 @@ double pi(std::map<std::string, int> & hapWin){
 	  ndiff += 1;
 	}
       }
-      
-      piSum += (double(hapA->second)/globalOpts.nhap) * (double(hapB->second)/globalOpts.nhap) * ndiff;
+
+      double f1 = double(hapA->second)/double(globalOpts.nhap);
+      double f2 = double(hapB->second)/double(globalOpts.nhap);
+      double perBaseDiff = double(ndiff)/double(globalOpts.window);
+
+      piSum += f1*f2*perBaseDiff;
+
+      //      std::cerr << "f1: " << f1 << " f2: " << f2 << " ndiff: " << ndiff << " piSum: " <<  piSum << std::endl; 
 
     }
+    done[hapA->first] = 1;
   }
   return piSum;
 }
@@ -158,9 +225,9 @@ double pi(std::map<std::string, int> & hapWin){
 void slideWindow(std::map<std::string, std::string> & haplotypes)
 {
 
-  int start = 0;
+ uint start = 0;
   
-  while(( start + globalOpts.window ) <= haplotypes.begin()->first.size()){
+  while(( start + globalOpts.window ) <= globalOpts.length){
 
     std::map<std::string, int> haplotypeWindowCount;
 
@@ -173,13 +240,13 @@ void slideWindow(std::map<std::string, std::string> & haplotypes)
 	haplotypeWindowCount[subHap] += 1;
       }
       else{
-	haplotypeWindowCount[subHap]  = 0;
+	haplotypeWindowCount[subHap]  = 1;
       }
     }
     
     double pv = pi(haplotypeWindowCount);
     
-    std::cerr << globalOpts.seqid << "\t" 
+    std::cout << globalOpts.seqid << "\t" 
 	      << start + 1 << "\t"
 	      << start + globalOpts.window  << "\t"
 	      << pv
@@ -195,58 +262,59 @@ void slideWindow(std::map<std::string, std::string> & haplotypes)
 
 int main( int argc, char** argv)
 {
+  globalOpts.window = 20  ;
   parseOpts(argc, argv);
   
   globalOpts.indel  = true;
-  globalOpts.window = 20  ;
 
-  
   if(globalOpts.seqid.empty()){
-    std::cerr << "FATAL: must specify a seqid: -s." << std::endl;
+    std::cerr << "FATAL: must specify an alignment name: -s." << std::endl;
+    printHelp();
     exit(1);
   }
-  if(globalOpts.files.size() == 0){
-    std::cerr << "FATAL: problem loading fastas: -f." << std::endl;
+  if(globalOpts.file.empty()){
+    std::cerr << "FATAL: problem loading fasta: -f." << std::endl;
+    printHelp();
     exit(1);
   }
   
-  globalOpts.nhap = globalOpts.files.size();
   
   std::map<std::string, FastaReference * > inds;
   std::map<std::string, std::string> haplotypes;
  
   // load haplotypes
  
-  int hSize = -1;
+  
+  FastaReference  rs;
 
-  for(std::vector<std::string>::iterator fas = globalOpts.files.begin();
-      fas != globalOpts.files.end(); fas++ ){
+  rs.open(globalOpts.file);
     
-    FastaReference * rs;
-    rs = new FastaReference;
-    
-    rs->open(*fas);
-    
-    haplotypes[*fas] = rs->getSequence(globalOpts.seqid);
-    
-    if(hSize == -1){
-      hSize = haplotypes[*fas].size();
-    }
-    else{
-      if(haplotypes[*fas].size() != hSize){
-	std::cerr << "FATAL: aligned fasta sequences must be same length: "
-		  << *fas << std::endl;
-	exit(1);
-      }
-    }
+  globalOpts.nhap = rs.index->sequenceNames.size();
+  globalOpts.length = 0;
 
-    if( haplotypes[*fas].size() < globalOpts.window ){
-      std::cerr << "FATAL: sequence cannot be smaller than the window size." << std::endl;
+  for(std::vector<std::string>::iterator it = rs.index->sequenceNames.begin();
+      it != rs.index->sequenceNames.end(); it++){
+
+    std::cerr << "INFO: processing haplotype: " << *it << std::endl;
+    
+    haplotypes[*it] = rs.getSequence(*it);
+  
+    if(globalOpts.length == 0){
+      globalOpts.length = haplotypes[*it].size();
+    }
+    else if(haplotypes[*it].size() !=  globalOpts.length){
+      std::cerr << "FATAL: sequence: " << *it << " was not the same length." << std::endl;
+      std::cerr << "INFO: Are the sequences aligned?" << std::endl;
+      printHelp();
       exit(1);
-      
+	
     }
-    
+
   }
+
+  std::cerr << "INFO: N haplotypes: " << haplotypes.size() << std::endl;
+  std::cerr << "INFO: Aligned length: " << globalOpts.length << std::endl;
+
   slideWindow(haplotypes);
   
   return 0;

@@ -4,7 +4,12 @@
 ######################################
 
 CC=g++
-CFLAGS= -Wall -std=c++0x -O3
+GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always)
+
+
+CFLAGS= -Wall -std=c++0x -O3 -DVERSION=\"$(GIT_VERSION)\"
+
+
 
 all: pi
 
