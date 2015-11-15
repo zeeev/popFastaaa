@@ -8,7 +8,7 @@ popFastaaa are simple stand-alone programs for analysis of aligned Multi-FASTA f
 - [ ] Allele frequency
 
 
-### installing
+### Installing
 
 ```
 git clone --recursive https://github.com/zeeev/popFastaaa.git 
