@@ -11,10 +11,12 @@ CFLAGS= -Wall -std=c++0x -O3 -DVERSION=\"$(GIT_VERSION)\"
 
 
 
-all: fastaH pi
+all: fastaH pi snp
 
 fastaH:
 	cd fastahack/ && make
 
 pi:
 	$(CC) $(CFLAGS) -I fastahack fastahack/*o src/pi.cpp -o PI
+snp:
+	$(CC) $(CFLAGS) -I fastahack fastahack/*o src/snp.cpp -o SNP
