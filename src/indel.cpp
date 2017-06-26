@@ -246,7 +246,7 @@ void SNP(std::map<std::string, std::string> & haplotypes)
 
               unsigned int j = refPos;
 
-              if( j < lastIndelBase[it->first] ){
+              if( j <= lastIndelBase[it->first] ){
                   continue;
               }
 
