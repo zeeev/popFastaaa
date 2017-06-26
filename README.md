@@ -1,4 +1,4 @@
-# popFastaaa
+# popFastaaa [![Build Status](https://travis-ci.org/zeeev/popFastaaa.svg?branch=master)](https://travis-ci.org/zeeev/popFastaaa)
 
 Simple stand-alone programs for analysis of aligned Multi-FASTA formated files.
 
