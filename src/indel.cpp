@@ -282,13 +282,13 @@ void SNP(std::map<std::string, std::string> & haplotypes)
                   alt  = haplotypes[it->first].substr(i-1, j-i + 1);
               }
 
-              int end = refPos + (j - i);
+              int end = refPos + (j - i) + globalOpts.offset;
 
               if(type == "INS"){
                   end = refPos;
               }
 
-              std::cout << globalOpts.ref << "\t" << refPos << "\t" << ".\t"  << ref << "\t" << alt  << "\t" << "TYPE=" << type << ";" << "END=" << end << ";" << "SAMPLE=" << it->first << std::endl;
+              std::cout << globalOpts.ref << "\t" << refPos + globalOpts.offset << "\t" << ".\t"  << ref << "\t" << alt  << "\t" << "TYPE=" << type << ";" << "END=" << end << ";" << "SAMPLE=" << it->first << std::endl;
 
           }
       }
