@@ -7,6 +7,7 @@ Simple stand-alone programs for analysis of aligned Multi-FASTA formated files.
 - [X] Alignment to SNP
 - [ ] Theta
 - [ ] Allele frequency
+- [X] Indels
 
 
 ### Installing
