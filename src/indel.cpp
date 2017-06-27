@@ -47,6 +47,7 @@ THE SOFTWARE.
 #include <map>
 #include "Fasta.h"
 #include "split.h"
+#include <algorithm>
 
 struct options{
     bool                     indel;
@@ -207,16 +208,85 @@ void printHeader(std::map<std::string, std::string> & haplotypes){
 }
 
 
+
 //------------------------------- SUBROUTINE --------------------------------
 /*
  Function input  : takes the haplotypes
-
  Function does   : prints the SNP positions
-
  Function returns: nothing
-
 */
-void SNP(std::map<std::string, std::string> & haplotypes)
+bool get_ref_alt(std::map<std::string, std::string> & haplotypes,
+                 int * start,
+                 int * end,
+                 int * backup,
+                 std::string & type,
+                 std::string & ref,
+                 std::string & alt,
+                 const std::string  hap){
+
+    unsigned int tmpEnd = *end;
+
+    if(haplotypes[globalOpts.seqid][*start] == '-'){
+
+        while(tmpEnd < haplotypes[globalOpts.seqid].size()){
+            if(haplotypes[globalOpts.seqid][tmpEnd] != '-') break;
+            tmpEnd += 1;
+        }
+        type   = "INS";
+        ref    = haplotypes[globalOpts.seqid][(*start)-1] ;
+        alt    = haplotypes[hap].substr((*start)-1, tmpEnd - (*start) +1 );
+
+        while(haplotypes[globalOpts.seqid][(*start)-1] == '-'){
+            if((*start - 1) < 0) return false;
+            *start -= 1;
+            *backup -= 1;
+        }
+        ref    = haplotypes[globalOpts.seqid][(*start)-1] ;
+        alt    = haplotypes[hap].substr((*start)-1, tmpEnd - (*start) +1 );
+
+        alt.erase(std::remove(alt.begin(), alt.end(), '-'), alt.end());
+
+        *end = tmpEnd;
+
+        return true;
+    }
+
+    if(haplotypes[hap][(*start)] == '-'){
+
+        while(tmpEnd < haplotypes[globalOpts.seqid].size()){
+            if(haplotypes[hap][tmpEnd] != '-') break;
+            tmpEnd += 1;
+        }
+        type   = "DEL";
+        ref    = haplotypes[globalOpts.seqid].substr((*start) -1, tmpEnd - (*start)) ;
+        alt    = haplotypes[globalOpts.seqid][(*start) - 1];
+
+        ref.erase(std::remove(ref.begin(), ref.end(), '-'), ref.end());
+
+        *end = tmpEnd;
+
+        return true;
+    }
+
+
+    ref = haplotypes[globalOpts.seqid][(*start)] ;
+    alt = haplotypes[hap][(*start)] ;
+    type = "SNP";
+
+    *end = tmpEnd;
+
+    return true;
+
+}
+
+
+//------------------------------- SUBROUTINE --------------------------------
+/*
+ Function input  : takes the haplotypes
+ Function does   : prints the SNP positions
+ Function returns: nothing
+*/
+void call_var(std::map<std::string, std::string> & haplotypes)
 {
 
     int refPos = 0;
@@ -234,66 +304,40 @@ void SNP(std::map<std::string, std::string> & haplotypes)
       if(haplotypes[globalOpts.seqid][i] != '-' ){
           refPos += 1;
       }
-      else{
-          refPos += 0;
-      }
 
       for(std::map<std::string, std::string>::iterator it = haplotypes.begin();
           it != haplotypes.end(); it++){
-          if(haplotypes[globalOpts.seqid][i] == '-' || haplotypes[it->first][i] == '-'){
 
               if(globalOpts.seqid == it->first) continue;
+              if(haplotypes[globalOpts.seqid][i] == haplotypes[it->first][i]) continue;
 
-              unsigned int j = refPos;
+              if(i <= lastIndelBase[it->first]) continue;
 
-              if( j <= lastIndelBase[it->first] ){
-                  continue;
-              }
+              std::string type, ref, alt;
+              int end    = i;
+              int start  = i;
+              int backup = 0;
+              get_ref_alt(haplotypes, &start, &end, &backup, type, ref, alt, it->first);
 
-              while(j < globalOpts.length){
-                  if(haplotypes[globalOpts.seqid][j] != '-' && haplotypes[it->first][j] != '-') break;
-                  j++;
-              }
-
-              lastIndelBase[it->first] = j;
+              lastIndelBase[it->first] = end;
 
 
-              if(i - 1 <= 0){
-                  std::cerr << "WARNING: Indel starts before MSA. Skipping." << std::endl;
-                  continue;
-              }
+                  std::cout << globalOpts.ref
+                            << "\t" << start + globalOpts.offset + backup
+                            << "\t"
+                            << ".\t"
+                            << ref
+                            << "\t"
+                            << alt
+                            << "\t"
+                            << "TYPE="
+                            << type << ";"
+                            << "END="
+                            << end << ";"
+                            << "SAMPLE="
+                            << it->first << std::endl;
 
-
-              std::string s1 = haplotypes[globalOpts.seqid].substr(i, j-i );
-              std::string s2 = haplotypes[it->first].substr(i,        j-i );
-
-              if(s1 == s2) continue;
-
-              std::string type = "DEL";
-
-              std::string ref =  haplotypes[globalOpts.seqid].substr(i -1 , j-i +1);
-              std::string alt =  haplotypes[globalOpts.seqid].substr(i -1 , 1   );
-
-
-
-              if(s1[0] == '-'){
-                  type = "INS";
-                  ref  = haplotypes[globalOpts.seqid].substr(i -1 , 1   );
-                  alt  = haplotypes[it->first].substr(i-1, j-i + 1);
-              }
-
-              int end = refPos + (j - i) + globalOpts.offset;
-
-              if(type == "INS"){
-                  end = refPos;
-              }
-
-              std::cout << globalOpts.ref << "\t" << refPos + globalOpts.offset << "\t" << ".\t"  << ref << "\t" << alt  << "\t" << "TYPE=" << type << ";" << "END=" << end << ";" << "SAMPLE=" << it->first << std::endl;
-
-          }
       }
-
-
   }
 
 }
@@ -372,7 +416,7 @@ int main( int argc, char** argv)
   std::cerr << "INFO: Aligned length: " << globalOpts.length << std::endl;
 
   printHeader(haplotypes);
-  SNP(haplotypes);
+  call_var(haplotypes);
 
   return 0;
 }
