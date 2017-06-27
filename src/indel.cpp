@@ -205,7 +205,7 @@ void printHeader(std::map<std::string, std::string> & haplotypes){
     std::cout << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"end\">\n";
     std::cout << "##INFO=<ID=SAMPLE,Number=1,Type=Integer,Description=\"sample of origin\">\n";
     std::cout << "##INFO=<ID=SOURCE_FILE,Number=1,Type=String,Description=\"file of origin\">\n";
-    std::cout << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">";
+    std::cout << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
     std::cout << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
 }
 
@@ -332,6 +332,7 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                             << ref
                             << "\t"
                             << alt
+                            << "\t.\t."
                             << "\t"
                             << "TYPE="
                             << type << ";"
