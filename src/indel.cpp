@@ -210,7 +210,6 @@ void printHeader(std::map<std::string, std::string> & haplotypes){
 }
 
 
-
 //------------------------------- SUBROUTINE --------------------------------
 /*
  Function input  : takes the haplotypes
@@ -325,7 +324,11 @@ void call_var(std::map<std::string, std::string> & haplotypes)
 
               int svlen = alt.length() - ref.length();
 
-                  std::cout << globalOpts.ref
+              if(type == "DEL"){
+                  backup -= 1;
+              }
+
+              std::cout << globalOpts.ref
                             << "\t" << refPos + globalOpts.offset + backup
                             << "\t"
                             << ".\t"
