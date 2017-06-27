@@ -340,7 +340,7 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                             << refPos + globalOpts.offset + abs(svlen) << ";"
                             << "SAMPLE="
                             << it->first
-                            << ";SOURCE=" << globalOpts.file << ";SVLEN=" << svlen << std::endl;
+                            << ";SOURCE_file=" << globalOpts.file << ";SVLEN=" << svlen << std::endl;
 
 
       }
