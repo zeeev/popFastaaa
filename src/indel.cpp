@@ -204,7 +204,8 @@ void printHeader(std::map<std::string, std::string> & haplotypes){
     std::cout << "##INFO=<ID=TYPE,Number=1,Type=String,Description=\"insertion or deletion\">\n";
     std::cout << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"end\">\n";
     std::cout << "##INFO=<ID=SAMPLE,Number=1,Type=Integer,Description=\"sample of origin\">\n";
-    std::cout << "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
+    std::cout << "##INFO=<ID=SOURCE_FILE,Number=1,Type=String,Description=\"file of origin\">\n";
+    std::cout << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
 }
 
 
@@ -258,7 +259,7 @@ bool get_ref_alt(std::map<std::string, std::string> & haplotypes,
             tmpEnd += 1;
         }
         type   = "DEL";
-        ref    = haplotypes[globalOpts.seqid].substr((*start) -1, tmpEnd - (*start)) ;
+        ref    = haplotypes[globalOpts.seqid].substr((*start) -1, (tmpEnd - (*start))+1) ;
         alt    = haplotypes[globalOpts.seqid][(*start) - 1];
 
         ref.erase(std::remove(ref.begin(), ref.end(), '-'), ref.end());
@@ -335,7 +336,8 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                             << "END="
                             << end << ";"
                             << "SAMPLE="
-                            << it->first << std::endl;
+                            << it->first
+                            << ";SOURCE=" << globalOpts.file << std::endl;
 
       }
   }
