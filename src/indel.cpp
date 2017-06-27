@@ -205,6 +205,7 @@ void printHeader(std::map<std::string, std::string> & haplotypes){
     std::cout << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"end\">\n";
     std::cout << "##INFO=<ID=SAMPLE,Number=1,Type=Integer,Description=\"sample of origin\">\n";
     std::cout << "##INFO=<ID=SOURCE_FILE,Number=1,Type=String,Description=\"file of origin\">\n";
+    std::cout << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">";
     std::cout << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
 }
 
@@ -322,9 +323,10 @@ void call_var(std::map<std::string, std::string> & haplotypes)
 
               lastIndelBase[it->first] = end;
 
+              int svlen = alt.length() - ref.length();
 
                   std::cout << globalOpts.ref
-                            << "\t" << start + globalOpts.offset + backup
+                            << "\t" << refPos + globalOpts.offset + backup
                             << "\t"
                             << ".\t"
                             << ref
@@ -334,10 +336,11 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                             << "TYPE="
                             << type << ";"
                             << "END="
-                            << end << ";"
+                            << refPos + globalOpts.offset + abs(svlen) << ";"
                             << "SAMPLE="
                             << it->first
-                            << ";SOURCE=" << globalOpts.file << std::endl;
+                            << ";SOURCE=" << globalOpts.file << ";SVLEN=" << svlen << std::endl;
+
 
       }
   }
