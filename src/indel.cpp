@@ -202,10 +202,10 @@ bool loadBases(std::map<std::string , std::string> & haplotypes,
 void printHeader(std::map<std::string, std::string> & haplotypes){
     std::cout << "##fileformat=VCFv4.2\n";
     std::cout << "##INFO=<ID=TYPE,Number=1,Type=String,Description=\"insertion or deletion\">\n";
-    std::cout << "##INFO=<ID=END,Number=1,Type=Integer,Description=\"end\">\n";
+    std::cout << "##INFO=<ID=INDEL_END,Number=1,Type=Integer,Description=\"end\">\n";
     std::cout << "##INFO=<ID=SAMPLE,Number=1,Type=Integer,Description=\"sample of origin\">\n";
     std::cout << "##INFO=<ID=SOURCE_FILE,Number=1,Type=String,Description=\"file of origin\">\n";
-    std::cout << "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
+    std::cout << "##INFO=<ID=INDEL_LEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n";
     std::cout << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n";
 }
 
@@ -328,8 +328,15 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                   backup -= 1;
               }
 
+              unsigned int print_start =  refPos + globalOpts.offset + backup;
+              unsigned int print_end = refPos + globalOpts.offset + abs(svlen);
+
+              if(type == "INS"){
+                  print_end = print_start + 1;
+              }
+
               std::cout << globalOpts.ref
-                            << "\t" << refPos + globalOpts.offset + backup
+                            << "\t" << print_start
                             << "\t"
                             << ".\t"
                             << ref
@@ -339,11 +346,11 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                             << "\t"
                             << "TYPE="
                             << type << ";"
-                            << "END="
-                            << refPos + globalOpts.offset + abs(svlen) << ";"
+                            << "INDEL_END="
+                            << print_end << ";"
                             << "SAMPLE="
                             << it->first
-                            << ";SOURCE_file=" << globalOpts.file << ";SVLEN=" << svlen << std::endl;
+                            << ";SOURCE_file=" << globalOpts.file << ";INDEL_LEN=" << svlen << std::endl;
 
 
       }
