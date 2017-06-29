@@ -350,7 +350,7 @@ void call_var(std::map<std::string, std::string> & haplotypes)
                             << print_end << ";"
                             << "SAMPLE="
                             << it->first
-                            << ";SOURCE_file=" << globalOpts.file << ";INDEL_LEN=" << svlen << std::endl;
+                            << ";SOURCE_FILE=" << globalOpts.file << ";INDEL_LEN=" << svlen << std::endl;
 
 
       }
