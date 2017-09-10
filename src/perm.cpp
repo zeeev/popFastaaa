@@ -74,7 +74,7 @@ void printHelp(void){
   std::cerr << std::endl;
   std::cerr << " Example:                                       " << std::endl;
   std::cerr << "        samtools faidx my.fasta                 " << std::endl;
-  
+
 
   std::cerr << "        PERM -f my.fasta -s \"alignment-name\" \\ " << std::endl;
   std::cerr << "        -w 200 -i  > pi.out 2> pi.err           " << std::endl;
@@ -89,7 +89,7 @@ void printHelp(void){
   std::cerr << "          -p - <STRING> - Pattern.                            " << std::endl;
   std::cerr << "          -n - <INT>    - Number of permutations [100].       " << std::endl;
   std::cerr << std::endl;
-  std::cerr << " Optional:  " << std::endl; 
+  std::cerr << " Optional:  " << std::endl;
    std::cerr << std::endl;
   printVersion();
 
@@ -102,7 +102,7 @@ int parseOpts(int argc, char** argv)
   while(opt != -1){
     switch(opt){
     case 'h':
-      {	
+      {
 	break;
       }
     case 's':
@@ -133,7 +133,7 @@ int parseOpts(int argc, char** argv)
 	break;
       }
     }
-    opt = getopt( argc, argv, optString ); 
+    opt = getopt( argc, argv, optString );
   }
   return 1;
 }
@@ -149,23 +149,23 @@ void pattern_match(const std::string & name,
 		   const std::string obs,
 		   uint offset,
 		   uint perm,
-		 
+
 		   const std::string & haplotype){
 
   double n  = 0;
   double tp = 0;
-  
+
   for(uint i = offset; i < (offset + globalOpts.window) - globalOpts.pattern.size() ; i++){
     n++;
     if(globalOpts.pattern == haplotype.substr(i, globalOpts.pattern.size())) tp++;
   }
-  std::cerr << name << "\t" << obs << "\t" << perm << "\t" << offset << n << "\t" << tp << std::endl;
+  std::cout << name << "\t" << obs << "\t" << perm << "\t" << offset << "\t" << tp << "\t" << n << "\t" << globalOpts.pattern << "\t" <<  haplotype.substr(offset, globalOpts.window)  << std::endl;
 }
 
 
 //------------------------------- SUBROUTINE --------------------------------
 /*
- Function input  : map<std::string, std::string> ; haplotypes 
+ Function input  : map<std::string, std::string> ; haplotypes
  Function does   : .
  Function returns: double
 
@@ -176,7 +176,7 @@ void permute_regions(const std::string & name,
   uint r = 0 ;
 
   pattern_match(name, "observed", globalOpts.start, 0, haplotype);
-  
+
   for(uint i = 0; i < globalOpts.number; i++){
     r = ranint(haplotype.size() - globalOpts.window);
     pattern_match(name, "perm", r, i, haplotype);
@@ -197,7 +197,7 @@ int main( int argc, char** argv)
   globalOpts.window = 0  ;
   globalOpts.number = 100;
   parseOpts(argc, argv);
-  
+
   if(globalOpts.window == 0){
     std::cerr << "FATAL: must specify window size: -w." << std::endl;
     printHelp();
@@ -213,16 +213,16 @@ int main( int argc, char** argv)
     printHelp();
     exit(1);
   }
-  
+
   std::map<std::string, FastaReference * > inds;
   std::map<std::string, std::string> haplotypes;
- 
+
   // load haplotypes
- 
+
   FastaReference  rs;
 
   rs.open(globalOpts.file);
-    
+
   globalOpts.nhap = rs.index->sequenceNames.size();
   globalOpts.length = 0;
 
@@ -230,9 +230,9 @@ int main( int argc, char** argv)
       it != rs.index->sequenceNames.end(); it++){
 
     std::cerr << "INFO: processing haplotype: " << *it << std::endl;
-    
+
     haplotypes[*it] = rs.getSequence(*it);
-  
+
     if(globalOpts.length == 0){
       globalOpts.length = haplotypes[*it].size();
     }
@@ -241,7 +241,7 @@ int main( int argc, char** argv)
       std::cerr << "INFO: Are the sequences aligned?" << std::endl;
       printHelp();
       exit(1);
-	
+
     }
   }
 
@@ -252,6 +252,6 @@ int main( int argc, char** argv)
       it != haplotypes.end(); it++){
     permute_regions(it->first, it->second);
   }
-  
+
   return 0;
 }
