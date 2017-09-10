@@ -53,12 +53,12 @@ struct options{
   uint                      nhap;
   uint                    length;
   uint                    number;
-  std::string              seqid;
+  uint                     start;
   std::string            pattern;
   std::string               file;
 }globalOpts;
 
-static const char *optString = "hw:f:n:p:";
+static const char *optString = "hw:f:n:p:s:";
 
 //------------------------------- XXXXXXXXXX --------------------------------
 void printVersion(void){
@@ -107,7 +107,7 @@ int parseOpts(int argc, char** argv)
       }
     case 's':
       {
-	globalOpts.seqid = optarg;
+	globalOpts.start = atoi(optarg);
 	break;
       }
     case 'p':
@@ -146,8 +146,10 @@ int ranint(int max)
 }
 
 void pattern_match(const std::string & name,
+		   const std::string obs,
 		   uint offset,
 		   uint perm,
+		 
 		   const std::string & haplotype){
 
   double n  = 0;
@@ -157,7 +159,7 @@ void pattern_match(const std::string & name,
     n++;
     if(globalOpts.pattern == haplotype.substr(i, globalOpts.pattern.size())) tp++;
   }
-  std::cerr << name << "\t" << perm << "\t" << offset << n << "\t" << tp << std::endl;
+  std::cerr << name << "\t" << obs << "\t" << perm << "\t" << offset << n << "\t" << tp << std::endl;
 }
 
 
@@ -172,10 +174,12 @@ void permute_regions(const std::string & name,
 		     const std::string & haplotype){
 
   uint r = 0 ;
+
+  pattern_match(name, "observed", globalOpts.start, 0, haplotype);
   
   for(uint i = 0; i < globalOpts.number; i++){
     r = ranint(haplotype.size() - globalOpts.window);
-    pattern_match(name, r, i, haplotype);
+    pattern_match(name, "perm", r, i, haplotype);
   }
 
 }
