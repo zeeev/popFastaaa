@@ -10,7 +10,7 @@ GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always)
 CFLAGS= -Wall -std=c++0x -O3 -DVERSION=\"$(GIT_VERSION)\"
 
 
-all: fastaH pi snp indel
+all: fastaH pi snp indel perm
 
 fastaH:
 	cd fastahack/ && make
@@ -21,3 +21,5 @@ snp:
 	$(CC) $(CFLAGS) -I fastahack fastahack/*o src/snp.cpp -o SNP
 indel:
 	$(CC) $(CFLAGS) -I fastahack fastahack/*o src/indel.cpp -o INDEL
+perm:
+	$(CC) $(CFLAGS) -I fastahack fastahack/*o src/perm.cpp -o PERM
